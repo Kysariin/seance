@@ -1,3 +1,4 @@
+# [PORTFOLIO ENTRY HERE](https://kysariin.github.io/project/sound/seance)
 # séance
 
 Markov chain composition engine trained on gothic rock, darkwave, and post-punk MIDI sources.
