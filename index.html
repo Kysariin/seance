@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>séance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #07070e;
+      color: #9080a8;
+      font-family: Georgia, 'Times New Roman', serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 1.2rem;
+      padding: 2rem 1rem;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: normal;
+      letter-spacing: 0.3em;
+      color: #ddd0f0;
+      opacity: 0.8;
+    }
+
+    #status {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      opacity: 0.35;
+      font-family: monospace;
+    }
+
+    #candle {
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    #candle.visible { opacity: 1; }
+
+    #note-display {
+      font-size: 3.5rem;
+      color: #c4b4e0;
+      letter-spacing: 0.1em;
+      height: 4.5rem;
+      display: flex;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      min-width: 6rem;
+      justify-content: center;
+    }
+
+    #note-display.visible { opacity: 1; }
+
+    .controls {
+      display: flex;
+      gap: 0.8rem;
+    }
+
+    button {
+      background: none;
+      border: 1px solid rgba(160, 130, 200, 0.25);
+      color: #a090c0;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      font-family: Georgia, serif;
+      transition: border-color 0.25s, color 0.25s;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: rgba(160, 130, 200, 0.65);
+      color: #ccc0e8;
+    }
+
+    button:disabled { opacity: 0.2; cursor: default; }
+
+    .param-row {
+      display: flex;
+      gap: 1.4rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .param-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .param-hint {
+      font-size: 0.56rem;
+      font-family: monospace;
+      color: rgba(144, 128, 168, 0.32);
+      letter-spacing: 0.03em;
+      text-align: center;
+      max-width: 160px;
+    }
+
+    .tempo-control {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 0.68rem;
+      color: rgba(144, 128, 168, 0.45);
+      font-family: monospace;
+      letter-spacing: 0.06em;
+    }
+
+    .tempo-control label { opacity: 0.65; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 80px;
+      height: 1px;
+      background: rgba(160, 130, 200, 0.2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(160, 130, 200, 0.55);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    input[type="range"]:hover::-webkit-slider-thumb {
+      background: rgba(180, 150, 220, 0.85);
+    }
+
+    select {
+      background: #07070e;
+      border: 1px solid rgba(160, 130, 200, 0.25);
+      color: #a090c0;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.68rem;
+      font-family: monospace;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select:hover {
+      border-color: rgba(160, 130, 200, 0.5);
+      color: #c0b0d8;
+    }
+
+    .legend {
+      font-size: 0.57rem;
+      font-family: monospace;
+      color: rgba(144, 128, 168, 0.28);
+      letter-spacing: 0.04em;
+      text-align: center;
+      line-height: 2;
+      max-width: 540px;
+    }
+
+    .legend-term {
+      color: rgba(160, 130, 200, 0.45);
+    }
+  </style>
+</head>
+<body>
+
+  <h2>séance</h2>
+  <p id="status">loading...</p>
+
+  <canvas id="candle" width="150" height="280"></canvas>
+  <div id="note-display"></div>
+
+  <div class="controls">
+    <button id="generateBtn">generate &amp; play</button>
+    <button id="stopBtn" disabled>stop</button>
+  </div>
+
+  <div class="param-row">
+    <div class="tempo-control">
+      <input type="range" id="bpmSlider" min="50" max="180" value="90" step="1">
+      <span id="bpmLabel">90 bpm</span>
+    </div>
+    <div class="param-col">
+      <div class="tempo-control">
+        <label for="rhythmSelect">rhythm</label>
+        <select id="rhythmSelect">
+          <option value="even">even</option>
+          <option value="swing">swing</option>
+          <option value="dotted">dotted</option>
+          <option value="lurch">lurch</option>
+        </select>
+      </div>
+      <div class="param-hint" id="rhythmHint">all notes the same length</div>
+    </div>
+    <div class="param-col">
+      <div class="tempo-control">
+        <label for="instrumentSelect">sound</label>
+        <select id="instrumentSelect">
+          <option value="synth">synth</option>
+          <option value="organ">organ</option>
+          <option value="pluck">pluck</option>
+          <option value="pad">pad</option>
+        </select>
+      </div>
+      <div class="param-hint" id="instrHint">two detuned oscillators · bright analog lead</div>
+    </div>
+  </div>
+
+  <div class="param-row">
+    <div class="param-col">
+      <div class="tempo-control">
+        <label>atk</label>
+        <input type="range" id="atkSlider" min="0.005" max="2.0" value="0.05" step="0.005">
+        <span id="atkLabel">0.05</span>
+      </div>
+      <div class="param-hint">how long notes take to appear</div>
+    </div>
+    <div class="param-col">
+      <div class="tempo-control">
+        <label>dcy</label>
+        <input type="range" id="dcySlider" min="0.01" max="1.5" value="0.15" step="0.01">
+        <span id="dcyLabel">0.15</span>
+      </div>
+      <div class="param-hint">how quickly they drop after the peak</div>
+    </div>
+    <div class="param-col">
+      <div class="tempo-control">
+        <label>sus</label>
+        <input type="range" id="susSlider" min="0" max="0.99" value="0.22" step="0.01">
+        <span id="susLabel">0.22</span>
+      </div>
+      <div class="param-hint">volume while the note is held<br>(0 = staccato, 1 = full)</div>
+    </div>
+    <div class="param-col">
+      <div class="tempo-control">
+        <label>rel</label>
+        <input type="range" id="relSlider" min="0.05" max="5.0" value="1.6" step="0.05">
+        <span id="relLabel">1.6</span>
+      </div>
+      <div class="param-hint">how long notes linger after ending</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-term">tempo</span> — how fast notes play &emsp;
+    <span class="legend-term">rhythm</span> — how notes are spaced &emsp;
+    <span class="legend-term">sound</span> — the instrument character
+  </div>
+
+  <script src="corpus.js"></script>
+  <script src="markov.js"></script>
+  <script src="audio.js"></script>
+  <script src="main.js"></script>
+
+</body>
+</html>
